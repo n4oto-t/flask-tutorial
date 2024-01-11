@@ -19,3 +19,23 @@ def close_db(e=None):
     db = g.pop("db", None)
     if db is not None:
         db.close()
+
+
+def init_db():
+    db = get_db()
+
+    with current_app.open_resource("schema.sql") as f:
+        db.executescript(f.read().decode("utf8"))
+
+
+@click.command("init-db")
+def init_db_command():
+    init_db()
+    click.echo("Initialized the db")
+
+
+def init_app(app):
+    # requestに対するresponseを行った後に実行する関数を登録
+    app.teardown_appcontext(close_db)
+
+    app.cli.add_command(init_db_command)
